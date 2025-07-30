@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    <title>小微企业管理系统</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    <!-- Vant CSS -->
+    <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/vant@4/lib/index.css">
+    
+    <!-- 自定义样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f7f8fa;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        #app {
+            min-height: 100vh;
+        }
+        
+        /* 语音按钮样式 */
+        .voice-button {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            transition: all 0.3s ease;
+        }
+        
+        .voice-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.6);
+        }
+        
+        .voice-button.recording {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 107, 107, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 107, 107, 0);
+            }
+        }
+        
+        /* 聊天界面样式 */
+        .chat-container {
+            height: calc(100vh - 100px);
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .message-item {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .message-item.user {
+            justify-content: flex-end;
+        }
+        
+        .message-content {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+        
+        .message-item.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 6px;
+        }
+        
+        .message-item.ai .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e8e8e8;
+            border-bottom-left-radius: 6px;
+        }
+        
+        .message-time {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+            text-align: center;
+        }
+        
+        /* 输入框样式 */
+        .input-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .input-field {
+            flex: 1;
+        }
+        
+        /* 加载动画 */
+        .loading-dots {
+            display: inline-block;
+        }
+        
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+        
+        /* 文件预览样式 */
+        .file-preview {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border: 1px solid #f0f0f0;
+        }
+        
+        .file-icon {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .file-info {
+            flex: 1;
+        }
+        
+        .file-name {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 2px;
+        }
+        
+        .file-size {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 375px) {
+            .message-content {
+                max-width: 85%;
+                font-size: 14px;
+            }
+            
+            .voice-button {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+                bottom: 70px;
+                right: 15px;
+            }
+        }
+        
+        /* 深色模式支持 */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1a1a1a;
+                color: #ffffff;
+            }
+            
+            .message-item.ai .message-content {
+                background: #2a2a2a;
+                color: #ffffff;
+                border-color: #404040;
+            }
+            
+            .input-container {
+                background: #2a2a2a;
+                border-top-color: #404040;
+            }
+            
+            .file-preview {
+                background: #2a2a2a;
+                border-color: #404040;
+            }
+            
+            .file-item {
+                background: #333333;
+                border-color: #404040;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 顶部导航栏 -->
+        <van-nav-bar 
+            :title="currentPageTitle" 
+            left-arrow 
+            @click-left="onNavBack"
+            :fixed="true"
+            :placeholder="true"
+        >
+            <template #right>
+                <van-icon name="setting-o" @click="showSettings = true" />
+            </template>
+        </van-nav-bar>
+        
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <!-- 首页 -->
+            <div v-if="currentPage === 'home'" class="page-home">
+                <!-- 功能卡片网格 -->
+                <van-grid :column-num="2" :gutter="10" style="padding: 15px;">
+                    <van-grid-item 
+                        v-for="item in menuItems" 
+                        :key="item.id"
+                        :icon="item.icon" 
+                        :text="item.text"
+                        @click="navigateTo(item.page)"
+                        :badge="item.badge"
+                    />
+                </van-grid>
+                
+                <!-- 快速统计 -->
+                <van-cell-group title="快速统计" style="margin: 15px;">
+                    <van-cell title="在职员工" :value="stats.activeEmployees + '人'" />
+                    <van-cell title="本月工资" :value="'¥' + stats.monthlySalary.toLocaleString()" />
+                    <van-cell title="本月支出" :value="'¥' + stats.monthlyExpense.toLocaleString()" />
+                    <van-cell title="文件总数" :value="stats.totalFiles + '个'" />
+                </van-cell-group>
+            </div>
+            
+            <!-- AI聊天页面 -->
+            <div v-if="currentPage === 'chat'" class="page-chat">
+                <div class="chat-container" ref="chatContainer">
+                    <div v-for="(message, index) in chatMessages" :key="index" 
+                         :class="['message-item', message.type]">
+                        <div class="message-content">
+                            <div v-html="formatMessage(message.content)"></div>
+                            <div class="message-time">{{ formatTime(message.timestamp) }}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- AI思考中 -->
+                    <div v-if="isAiThinking" class="message-item ai">
+                        <div class="message-content">
+                            <span class="loading-dots">AI正在思考中</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 输入框 -->
+                <div class="input-container">
+                    <van-field 
+                        v-model="inputMessage"
+                        placeholder="输入消息或点击语音按钮"
+                        @keyup.enter="sendMessage"
+                        class="input-field"
+                    />
+                    <van-button type="primary" size="small" @click="sendMessage" :disabled="!inputMessage.trim()">
+                        发送
+                    </van-button>
+                </div>
+            </div>
+            
+            <!-- 员工管理页面 -->
+            <div v-if="currentPage === 'employees'" class="page-employees">
+                <!-- 搜索栏 -->
+                <van-search 
+                    v-model="employeeSearch" 
+                    placeholder="搜索员工姓名或部门"
+                    @search="searchEmployees"
+                    style="margin: 10px;"
+                />
+                
+                <!-- 筛选标签 -->
+                <van-tabs v-model="employeeFilter" @change="filterEmployees" style="margin: 0 10px;">
+                    <van-tab title="全部" name="all"></van-tab>
+                    <van-tab title="在职" name="active"></van-tab>
+                    <van-tab title="已归档" name="archived"></van-tab>
+                </van-tabs>
+                
+                <!-- 员工列表 -->
+                <van-list 
+                    v-model:loading="employeeLoading" 
+                    :finished="employeeFinished"
+                    @load="loadEmployees"
+                    style="padding: 10px;"
+                >
+                    <van-card 
+                        v-for="employee in employees" 
+                        :key="employee.id"
+                        :title="employee.name"
+                        :desc="employee.department + ' - ' + employee.position"
+                        :thumb="getAvatarUrl(employee.name)"
+                        @click="viewEmployee(employee)"
+                    >
+                        <template #tags>
+                            <van-tag v-if="employee.is_archived" type="warning">已归档</van-tag>
+                            <van-tag v-else type="success">在职</van-tag>
+                        </template>
+                        <template #footer>
+                            <van-button size="mini" @click.stop="editEmployee(employee)">编辑</van-button>
+                            <van-button size="mini" type="warning" @click.stop="archiveEmployee(employee)" v-if="!employee.is_archived">
+                                归档
+                            </van-button>
+                        </template>
+                    </van-card>
+                </van-list>
+                
+                <!-- 添加员工按钮 -->
+                <van-floating-bubble 
+                    icon="plus" 
+                    @click="showAddEmployee = true"
+                    style="bottom: 100px;"
+                />
+            </div>
+            
+            <!-- 文件管理页面 -->
+            <div v-if="currentPage === 'files'" class="page-files">
+                <!-- 分类筛选 -->
+                <van-dropdown-menu style="margin: 10px;">
+                    <van-dropdown-item v-model="fileCategory" :options="fileCategoryOptions" @change="filterFiles" />
+                </van-dropdown-menu>
+                
+                <!-- 文件列表 -->
+                <van-list 
+                    v-model:loading="fileLoading" 
+                    :finished="fileFinished"
+                    @load="loadFiles"
+                    style="padding: 10px;"
+                >
+                    <div v-for="file in files" :key="file.id" class="file-item" @click="previewFile(file)">
+                        <div class="file-icon">
+                            {{ getFileIcon(file.file_name) }}
+                        </div>
+                        <div class="file-info">
+                            <div class="file-name">{{ file.file_name }}</div>
+                            <div class="file-size">{{ formatFileSize(file.file_size) }} · {{ file.category }}</div>
+                        </div>
+                        <van-icon name="arrow" />
+                    </div>
+                </van-list>
+                
+                <!-- 上传文件按钮 -->
+                <van-floating-bubble 
+                    icon="plus" 
+                    @click="showUploadFile = true"
+                    style="bottom: 100px;"
+                />
+            </div>
+            
+            <!-- 账表管理页面 -->
+            <div v-if="currentPage === 'accounts'" class="page-accounts">
+                <!-- 账表列表 -->
+                <van-list 
+                    v-model:loading="accountLoading" 
+                    :finished="accountFinished"
+                    @load="loadAccounts"
+                    style="padding: 10px;"
+                >
+                    <van-card 
+                        v-for="account in accounts" 
+                        :key="account.id"
+                        :title="account.table_name"
+                        :desc="account.description"
+                        @click="viewAccount(account)"
+                    >
+                        <template #tags>
+                            <van-tag :type="account.table_type === 'salary' ? 'primary' : 'warning'">
+                                {{ account.table_type === 'salary' ? '工资表' : '支出表' }}
+                            </van-tag>
+                        </template>
+                        <template #footer>
+                            <van-button size="mini" @click.stop="exportAccount(account)">导出</van-button>
+                            <van-button size="mini" type="primary" @click.stop="viewChart(account)">图表</van-button>
+                        </template>
+                    </van-card>
+                </van-list>
+                
+                <!-- 创建账表按钮 -->
+                <van-floating-bubble 
+                    icon="plus" 
+                    @click="showCreateAccount = true"
+                    style="bottom: 100px;"
+                />
+            </div>
+        </div>
+        
+        <!-- 语音按钮 -->
+        <button 
+            v-if="currentPage === 'chat'"
+            :class="['voice-button', { recording: isRecording }]"
+            @touchstart="startRecording"
+            @touchend="stopRecording"
+            @touchcancel="stopRecording"
+        >
+            <van-icon :name="isRecording ? 'pause' : 'volume-o'" />
+        </button>
+        
+        <!-- 底部导航栏 -->
+        <van-tabbar v-model="currentPage" :fixed="true" :placeholder="true">
+            <van-tabbar-item name="home" icon="home-o">首页</van-tabbar-item>
+            <van-tabbar-item name="chat" icon="chat-o" :badge="unreadMessages">AI助手</van-tabbar-item>
+            <van-tabbar-item name="employees" icon="friends-o">员工</van-tabbar-item>
+            <van-tabbar-item name="files" icon="folder-o">文件</van-tabbar-item>
+            <van-tabbar-item name="accounts" icon="bill-o">账表</van-tabbar-item>
+        </van-tabbar>
+        
+        <!-- 设置弹窗 -->
+        <van-popup v-model:show="showSettings" position="right" style="width: 80%; height: 100%;">
+            <van-nav-bar title="设置" left-arrow @click-left="showSettings = false" />
+            <van-cell-group>
+                <van-cell title="服务器地址" :value="serverUrl" @click="showServerConfig = true" is-link />
+                <van-cell title="语音设置" @click="showVoiceConfig = true" is-link />
+                <van-cell title="清除聊天记录" @click="clearChatHistory" />
+                <van-cell title="关于" @click="showAbout = true" is-link />
+            </van-cell-group>
+        </van-popup>
+        
+        <!-- 服务器配置弹窗 -->
+        <van-popup v-model:show="showServerConfig" position="bottom" style="height: 40%;">
+            <van-nav-bar title="服务器配置" left-arrow @click-left="showServerConfig = false" />
+            <van-form @submit="saveServerConfig">
+                <van-field v-model="tempServerUrl" label="服务器地址" placeholder="http://localhost:8000" />
+                <div style="margin: 16px;">
+                    <van-button round block type="primary" native-type="submit">保存</van-button>
+                </div>
+            </van-form>
+        </van-popup>
+        
+        <!-- 加载提示 -->
+        <van-loading v-if="globalLoading" type="spinner" color="#1989fa" vertical>
+            加载中...
+        </van-loading>
+        
+        <!-- 全局提示 -->
+        <van-notify v-model:show="showNotify" :type="notifyType" :message="notifyMessage" />
+    </div>
+    
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Vant 4 -->
+    <script src="https://fastly.jsdelivr.net/npm/vant@4/lib/vant.min.js"></script>
+    <!-- Axios -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    
+    <!-- 应用脚本 -->
+    <script src="./js/app.js"></script>
+</body>
+</html>
