@@ -1,4 +1,4 @@
-// 小微企业管理系统 - 前端应用
+// 小微企业管理系统 - 前端应用（DeepSeek API集成版）
 const { createApp } = Vue;
 const { showToast, showDialog, showConfirmDialog, showNotify } = vant;
 

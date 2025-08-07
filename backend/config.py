@@ -25,7 +25,11 @@ class Settings(BaseSettings):
     ALLOWED_EXTENSIONS: list = [".jpg", ".jpeg", ".png", ".pdf", ".doc", ".docx", ".xls", ".xlsx"]
     
     # AI模型配置
-    AI_MODEL_PATH: str = "models/chatglm-6b"
+    AI_MODEL_TYPE: str = "deepseek"  # 使用DeepSeek API
+    DEEPSEEK_API_KEY: str = "your-deepseek-api-key-here"  # 请替换为实际的API密钥
+    DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
+    DEEPSEEK_MODEL: str = "deepseek-chat"  # 模型名称
+    AI_MODEL_PATH: str = "models/chatglm-6b"  # 保留作为备用
     VOSK_MODEL_PATH: str = "models/vosk-model-cn"
     
     # 备份配置
@@ -103,3 +107,26 @@ AI_COMMAND_TEMPLATES = {
     "导出员工信息": "导出{condition}员工信息",
     "备份数据": "备份系统数据"
 }
+
+# DeepSeek API配置
+DEEPSEEK_CONFIG = {
+    "api_key": settings.DEEPSEEK_API_KEY,
+    "base_url": settings.DEEPSEEK_BASE_URL,
+    "model": settings.DEEPSEEK_MODEL,
+    "max_tokens": 2048,
+    "temperature": 0.7,
+    "timeout": 30
+}
+
+# AI系统提示词
+AI_SYSTEM_PROMPT = """
+你是一个专业的小微企业管理助手，专门帮助处理以下业务：
+1. 员工信息管理（添加、查询、修改员工档案）
+2. 工资表生成和管理
+3. 项目支出记录和统计
+4. 财务报表生成
+5. 数据导出和备份
+
+请用简洁、专业的语言回答用户问题，并在适当时候主动提供相关建议。
+如果用户的指令不够明确，请主动询问所需的具体信息。
+"""

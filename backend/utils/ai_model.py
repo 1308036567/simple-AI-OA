@@ -1,4 +1,4 @@
-import json
+import os
 import re
 import logging
 from typing import Dict, List, Any, Optional, Tuple
@@ -10,21 +10,23 @@ import pyttsx3
 from io import BytesIO
 import wave
 import threading
-from config import AI_INSTRUCTIONS, AI_MODEL_CONFIG
+import json
+from config import DEEPSEEK_CONFIG, AI_SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 
 class AIModelManager:
-    """AI模型管理器"""
+    """AI模型管理器 - 使用DeepSeek API"""
     
     def __init__(self):
-        self.model_config = AI_MODEL_CONFIG
-        self.instructions = AI_INSTRUCTIONS
-        self.is_model_loaded = False
-        self.model_status = 'not_loaded'
+        self.deepseek_config = DEEPSEEK_CONFIG
+        self.system_prompt = AI_SYSTEM_PROMPT
+        self.is_model_loaded = True  # API模式下默认可用
+        self.model_status = 'loaded'
         self.speech_recognizer = sr.Recognizer()
         self.tts_engine = None
         self._init_tts()
+        self.session = None
     
     def _init_tts(self):
         """初始化文本转语音引擎"""
@@ -45,35 +47,41 @@ class AIModelManager:
             logger.error(f"TTS引擎初始化失败: {e}")
     
     async def load_model(self) -> Dict[str, Any]:
-        """加载AI模型"""
+        """初始化DeepSeek API连接"""
         try:
             self.model_status = 'loading'
             
-            # 模拟模型加载过程
-            await asyncio.sleep(2)
+            # 检查API配置
+            if not self.deepseek_config.get('api_key') or self.deepseek_config['api_key'] == 'your-deepseek-api-key-here':
+                raise Exception("DeepSeek API密钥未配置，请在config.py中设置DEEPSEEK_API_KEY")
             
-            # 检查模型配置
-            if not self.model_config.get('model_path'):
-                raise Exception("模型路径未配置")
+            # 创建HTTP会话
+            self.session = aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=self.deepseek_config.get('timeout', 30))
+            )
+            
+            # 测试API连接
+            await self._test_api_connection()
             
             self.is_model_loaded = True
             self.model_status = 'loaded'
             
             return {
                 'success': True,
-                'message': '模型加载成功',
+                'message': 'DeepSeek API连接成功',
                 'model_info': {
-                    'name': self.model_config.get('model_name', 'ChatGLM-6B'),
-                    'version': self.model_config.get('model_version', '1.0'),
-                    'status': self.model_status
+                    'name': 'DeepSeek Chat',
+                    'model': self.deepseek_config.get('model', 'deepseek-chat'),
+                    'status': self.model_status,
+                    'type': 'api'
                 }
             }
         except Exception as e:
             self.model_status = 'error'
-            logger.error(f"模型加载失败: {e}")
+            logger.error(f"DeepSeek API初始化失败: {e}")
             return {
                 'success': False,
-                'message': f'模型加载失败: {str(e)}',
+                'message': f'API初始化失败: {str(e)}',
                 'model_info': None
             }
     
@@ -308,24 +316,77 @@ class AIModelManager:
                 'response': None
             }
     
+    async def _test_api_connection(self) -> bool:
+        """测试DeepSeek API连接"""
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.deepseek_config["api_key"]}',
+                'Content-Type': 'application/json'
+            }
+            
+            data = {
+                'model': self.deepseek_config['model'],
+                'messages': [
+                    {'role': 'user', 'content': '你好'}
+                ],
+                'max_tokens': 10
+            }
+            
+            async with self.session.post(
+                f"{self.deepseek_config['base_url']}/chat/completions",
+                headers=headers,
+                json=data
+            ) as response:
+                if response.status == 200:
+                    return True
+                else:
+                    raise Exception(f"API测试失败，状态码: {response.status}")
+                    
+        except Exception as e:
+            logger.error(f"API连接测试失败: {e}")
+            raise
+    
     async def _generate_response(self, context: str) -> str:
-        """生成AI响应"""
-        # 这里应该调用实际的AI模型
-        # 目前使用模拟响应
-        
-        responses = [
-            "我理解您的需求，让我来帮助您处理。",
-            "好的，我会协助您完成这项工作。",
-            "明白了，我正在为您处理相关事务。",
-            "收到，让我来为您解决这个问题。",
-            "我会根据您的要求来操作。"
-        ]
-        
-        # 模拟处理时间
-        await asyncio.sleep(1)
-        
-        import random
-        return random.choice(responses)
+        """使用DeepSeek API生成响应"""
+        try:
+            if not self.session:
+                raise Exception("API会话未初始化")
+            
+            headers = {
+                'Authorization': f'Bearer {self.deepseek_config["api_key"]}',
+                'Content-Type': 'application/json'
+            }
+            
+            # 构建消息
+            messages = [
+                {'role': 'system', 'content': self.system_prompt},
+                {'role': 'user', 'content': context}
+            ]
+            
+            data = {
+                'model': self.deepseek_config['model'],
+                'messages': messages,
+                'max_tokens': self.deepseek_config.get('max_tokens', 2048),
+                'temperature': self.deepseek_config.get('temperature', 0.7),
+                'stream': False
+            }
+            
+            async with self.session.post(
+                f"{self.deepseek_config['base_url']}/chat/completions",
+                headers=headers,
+                json=data
+            ) as response:
+                if response.status == 200:
+                    result = await response.json()
+                    return result['choices'][0]['message']['content'].strip()
+                else:
+                    error_text = await response.text()
+                    logger.error(f"DeepSeek API错误: {response.status} - {error_text}")
+                    return "抱歉，AI服务暂时不可用，请稍后再试。"
+                    
+        except Exception as e:
+            logger.error(f"DeepSeek API调用失败: {e}")
+            return "抱歉，处理您的请求时出现了错误，请稍后再试。"
     
     def speech_to_text(self, audio_data: bytes) -> Dict[str, Any]:
         """语音转文字"""
@@ -414,16 +475,19 @@ class AIModelManager:
             'is_loaded': self.is_model_loaded,
             'status': self.model_status,
             'model_info': {
-                'name': self.model_config.get('model_name', 'ChatGLM-6B'),
-                'version': self.model_config.get('model_version', '1.0'),
-                'path': self.model_config.get('model_path', ''),
-                'max_tokens': self.model_config.get('max_tokens', 2048)
+                'name': 'DeepSeek Chat',
+                'model': self.deepseek_config.get('model', 'deepseek-chat'),
+                'type': 'api',
+                'base_url': self.deepseek_config.get('base_url', ''),
+                'max_tokens': self.deepseek_config.get('max_tokens', 2048),
+                'temperature': self.deepseek_config.get('temperature', 0.7)
             },
             'capabilities': {
                 'text_chat': True,
                 'voice_recognition': True,
                 'text_to_speech': self.tts_engine is not None,
-                'instruction_parsing': True
+                'instruction_parsing': True,
+                'api_based': True
             }
         }
     
@@ -470,10 +534,34 @@ class AIModelManager:
         ]
     
     async def reload_model(self) -> Dict[str, Any]:
-        """重新加载模型"""
+        """重新初始化DeepSeek API连接"""
+        # 关闭现有会话
+        if self.session:
+            await self.session.close()
+            self.session = None
+        
         self.is_model_loaded = False
         self.model_status = 'not_loaded'
         return await self.load_model()
+    
+    async def close(self):
+        """关闭资源"""
+        if self.session:
+            await self.session.close()
+            self.session = None
+    
+    def __del__(self):
+        """析构函数"""
+        if self.session and not self.session.closed:
+            # 在事件循环中关闭会话
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    loop.create_task(self.session.close())
+                else:
+                    loop.run_until_complete(self.session.close())
+            except:
+                pass
 
 def create_ai_manager() -> AIModelManager:
     """创建AI模型管理器实例"""

@@ -1,0 +1,26 @@
+# 数据库配置
+DATABASE_URL=sqlite:///./company.db
+# 或使用MySQL
+# DATABASE_URL=mysql+pymysql://username:password@localhost/company_db
+
+# 安全密钥
+SECRET_KEY=your-secret-key-here-change-this-in-production
+
+# AI模型路径（可选）
+AI_MODEL_PATH=./models/chatglm-6b
+
+# 文件上传目录
+UPLOAD_DIR=./uploads
+
+# 备份目录
+BACKUP_DIR=./backups
+
+# 日志目录
+LOG_DIR=./logs
+
+# 应用配置
+APP_NAME=小微企业管理系统
+APP_VERSION=1.0.0
+DEBUG=true
+HOST=0.0.0.0
+PORT=8000

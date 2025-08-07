@@ -8,18 +8,14 @@ from datetime import datetime
 from database import get_db
 from models import AIChat, Employee, AccountTable, OperationLog
 from schemas.ai_chat import ChatRequest, ChatResponse, VoiceRequest
-from utils.ai_model import AIModelManager
-from utils.voice_recognition import VoiceRecognizer
-from utils.command_parser import CommandParser
+from utils.ai_model import AIModelManager, get_ai_manager
 from utils.logger import log_operation
 from config import settings
 
 router = APIRouter()
 
 # 初始化AI组件
-ai_model = AIModelManager(settings.AI_MODEL_PATH)
-voice_recognizer = VoiceRecognizer(settings.VOSK_MODEL_PATH)
-command_parser = CommandParser()
+ai_model = get_ai_manager()  # 使用全局AI管理器实例
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_ai(
@@ -31,17 +27,28 @@ async def chat_with_ai(
         session_id = chat_request.session_id or str(uuid.uuid4())
         user_input = chat_request.message
         
-        # 解析用户指令
-        parsed_command = await command_parser.parse_command(user_input)
+        # AI模型会自动解析指令，这里不需要单独的命令解析器
         
-        # 执行指令或生成回复
-        if parsed_command["type"] == "command":
-            # 执行具体指令
-            execution_result = await execute_command(parsed_command, db)
-            ai_response = f"已执行指令：{parsed_command['action']}\n结果：{execution_result['message']}"
+        # 获取历史对话上下文
+        recent_chats = db.query(AIChat).filter(
+            AIChat.session_id == session_id
+        ).order_by(AIChat.created_at.desc()).limit(5).all()
+        
+        context = []
+        for chat in reversed(recent_chats):
+            context.append({
+                'user': chat.user_input,
+                'assistant': chat.ai_response
+            })
+        
+        # 使用AI模型生成回复
+        ai_result = await ai_model.chat_with_model(user_input, context)
+        
+        if ai_result['success']:
+            ai_response = ai_result['response']
+            execution_result = ai_result.get('instruction')
         else:
-            # 普通对话
-            ai_response = await ai_model.generate_response(user_input)
+            ai_response = ai_result['response']
             execution_result = None
         
         # 保存对话记录
@@ -50,7 +57,7 @@ async def chat_with_ai(
             user_input=user_input,
             user_input_type="text",
             ai_response=ai_response,
-            command_type=parsed_command.get("type"),
+            command_type="instruction" if execution_result else "chat",
             execution_result=json.dumps(execution_result) if execution_result else None
         )
         
@@ -67,7 +74,7 @@ async def chat_with_ai(
         return ChatResponse(
             session_id=session_id,
             message=ai_response,
-            command_type=parsed_command.get("type"),
+            command_type="instruction" if execution_result else "chat",
             execution_result=execution_result,
             timestamp=datetime.now()
         )
@@ -91,11 +98,13 @@ async def voice_chat(
         # 读取音频文件
         audio_content = await audio_file.read()
         
-        # 语音识别
-        recognized_text = await voice_recognizer.recognize(audio_content)
+        # 使用AI模型的语音识别功能
+        speech_result = ai_model.speech_to_text(audio_content)
         
-        if not recognized_text:
-            raise HTTPException(status_code=400, detail="语音识别失败")
+        if not speech_result['success']:
+            raise HTTPException(status_code=400, detail=f"语音识别失败: {speech_result.get('error', '未知错误')}")
+        
+        recognized_text = speech_result['text']
         
         # 创建文本对话请求
         chat_request = ChatRequest(
