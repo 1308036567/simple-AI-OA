@@ -409,39 +409,8 @@ tail -f ./logs/error.log
 tail -f ./logs/access.log
 ```
 
-## 🤝 贡献指南
-
-1. Fork 项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开 Pull Request
-
 ### 开发规范
 - 遵循PEP 8代码规范
 - 编写单元测试
 - 更新相关文档
 - 提交前运行测试
-
-## 📄 许可证
-
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
-
-## 📞 支持与反馈
-
-- 问题反馈: [GitHub Issues](https://github.com/your-repo/issues)
-- 功能建议: [GitHub Discussions](https://github.com/your-repo/discussions)
-- 邮件联系: support@yourcompany.com
-
-## 🙏 致谢
-
-感谢以下开源项目的支持：
-- [FastAPI](https://fastapi.tiangolo.com/)
-- [Vue.js](https://vuejs.org/)
-- [Vant](https://vant-contrib.gitee.io/vant/)
-- [SQLAlchemy](https://www.sqlalchemy.org/)
-- [ChatGLM](https://github.com/THUDM/ChatGLM-6B)
-
----
-
-**注意**: 本系统专为小微企业设计，请根据实际需求进行配置和使用。在生产环境中部署前，请确保完成安全配置和性能优化。
