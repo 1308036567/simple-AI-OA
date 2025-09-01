@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公司信息管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        .nav-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .nav-btn:hover, .nav-btn.active {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.5);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .page {
+            display: none;
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+        .page.active {
+            display: block;
+        }
+        .page h2 {
+            margin-bottom: 1.5rem;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+        .test-section {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        .test-section h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        .api-test {
+            margin: 1rem 0;
+        }
+        .api-test button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+        .api-test button:hover {
+            background: #5a6fd8;
+        }
+        .result {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #667eea;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+        }
+        .chat-messages {
+            flex: 1;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            background: #fafafa;
+        }
+        .chat-input {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        .file-upload {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .file-upload input[type="file"] {
+            padding: 0.5rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        .message {
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+        .user-message {
+            background: #e3f2fd;
+            text-align: right;
+        }
+        .ai-message {
+            background: #f3e5f5;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+        .stat-card h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .function-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .function-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s;
+            text-align: center;
+        }
+        .function-card:hover {
+            transform: translateY(-2px);
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        .data-table th, .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+            align-items: center;
+        }
+        .search-bar input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+        .form-group {
+            margin: 1rem 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        .file-group {
+            margin: 1rem 0;
+            padding: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        .file-group h4 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        .file-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .file-item {
+            background: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-bar select, .filter-bar input {
+            padding: 0.5rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-paid {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-overdue {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .confirmation-dialog {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .confirmation-dialog h4 {
+            color: #856404;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">公司信息管理系统</h1>
+        <div class="nav-buttons">
+            <button class="nav-btn active" onclick="showPage('ai-chat')">AI对话</button>
+            <button class="nav-btn" onclick="showPage('dashboard')">管理页面</button>
+            <button class="nav-btn" onclick="showPage('api-test')">API测试</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- AI对话页面 -->
+        <div id="ai-chat" class="page active">
+            <h2>AI对话</h2>
+            <div class="chat-container">
+                <div id="chat-messages" class="chat-messages">
+                    <div class="message ai-message">您好！我是AI助手，可以帮您查询和管理公司信息。您可以询问员工信息、财务数据、文件管理等问题，我会为您提供准确的答案。</div>
+                </div>
+                <div class="file-upload">
+                    <input type="file" id="file-input" accept="*/*" style="display:none;">
+                    <div id="selected-file" style="display:none;" class="file-item">
+                        <span id="file-name"></span>
+                        <button onclick="clearFile()" class="btn btn-secondary">移除</button>
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="chat-input" placeholder="请输入您的问题，如：查询2024年8月城东项目工资、新增员工李四等..." onkeypress="handleChatKeyPress(event)">
+                    <button onclick="selectFile()" class="btn btn-secondary">📎</button>
+                    <button onclick="sendMessage()" class="btn btn-primary">发送</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 管理页面 -->
+        <div id="dashboard" class="page">
+            <h2>管理页面</h2>
+            <div class="dashboard">
+                <h3>仪表盘</h3>
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <h3>员工统计</h3>
+                        <div class="stat-value" id="employee-stats">加载中...</div>
+                        <p id="employee-detail">统计详情</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>文件统计</h3>
+                        <div class="stat-value" id="file-stats">加载中...</div>
+                        <p id="file-detail">统计详情</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>财务统计</h3>
+                        <div class="stat-value" id="finance-stats">加载中...</div>
+                        <p id="finance-detail">统计详情</p>
+                    </div>
+                </div>
+                <h3>功能模块</h3>
+                <div class="function-cards">
+                    <div class="function-card" onclick="showPage('employees')">
+                        <h4>👥 员工信息</h4>
+                        <p>管理员工档案信息</p>
+                        <button class="btn btn-primary">查看</button>
+                    </div>
+                    <div class="function-card" onclick="showPage('files')">
+                        <h4>📁 文件信息</h4>
+                        <p>管理项目文件资料</p>
+                        <button class="btn btn-primary">查看</button>
+                    </div>
+                    <div class="function-card" onclick="showPage('finance')">
+                        <h4>💰 财务信息</h4>
+                        <p>管理工资和开销记录</p>
+                        <button class="btn btn-primary">查看</button>
+                    </div>
+                </div>
+                <div class="test-section">
+                    <h3>系统统计</h3>
+                    <div class="api-test">
+                        <button onclick="loadDashboardStats()">加载统计数据</button>
+                        <div id="dashboard-result" class="result" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 员工信息页面 -->
+        <div id="employees" class="page">
+            <h2>员工信息管理</h2>
+            <div class="search-bar">
+                <input type="text" id="employee-search" placeholder="输入员工编号或姓名搜索...">
+                <button onclick="searchEmployees()" class="btn btn-primary">搜索</button>
+                <button onclick="showAddEmployeeModal()" class="btn btn-primary">新增员工</button>
+                <button onclick="loadEmployees()" class="btn btn-secondary">刷新</button>
+            </div>
+            <div id="employee-table-container">
+                <table class="data-table" id="employee-table">
+                    <thead>
+                        <tr>
+                            <th>员工编号</th>
+                            <th>姓名</th>
+                            <th>身份证号</th>
+                            <th>电话号码</th>
+                            <th>银行卡号</th>
+                            <th>开户行</th>
+                            <th>职位</th>
+                            <th>在职状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employee-tbody">
+                        <tr><td colspan="9">正在加载员工数据...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 文件信息页面 -->
+        <div id="files" class="page">
+            <h2>文件信息管理</h2>
+            <div class="search-bar">
+                <input type="file" id="file-upload-input" accept="*/*" style="display:none;">
+                <select id="project-select">
+                    <option value="">选择项目</option>
+                </select>
+                <button onclick="document.getElementById('file-upload-input').click()" class="btn btn-primary">上传文件</button>
+                <button onclick="loadFiles()" class="btn btn-secondary">刷新</button>
+            </div>
+            <div id="files-container">
+                <div id="files-by-project">
+                    <p>正在加载文件数据...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 财务信息页面 -->
+        <div id="finance" class="page">
+            <h2>财务信息管理</h2>
+            <div class="filter-bar">
+                <label>时间筛选：</label>
+                <input type="month" id="finance-month" value="2024-08">
+                <button onclick="filterFinanceData()" class="btn btn-primary">筛选</button>
+                <button onclick="loadFinanceData()" class="btn btn-secondary">刷新</button>
+            </div>
+            
+            <div style="margin: 2rem 0;">
+                <h3>工人工资表</h3>
+                <table class="data-table" id="salary-table">
+                    <thead>
+                        <tr>
+                            <th>员工编号</th>
+                            <th>姓名</th>
+                            <th>项目名称</th>
+                            <th>工资金额</th>
+                            <th>发放日期</th>
+                            <th>发放状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salary-tbody">
+                        <tr><td colspan="7">正在加载工资数据...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="margin: 2rem 0;">
+                <h3>项目开销表</h3>
+                <table class="data-table" id="expense-table">
+                    <thead>
+                        <tr>
+                            <th>项目名称</th>
+                            <th>开销类型</th>
+                            <th>开销金额</th>
+                            <th>开销日期</th>
+                            <th>备注</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expense-tbody">
+                        <tr><td colspan="6">正在加载开销数据...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- API测试页面 -->
+        <div id="api-test" class="page">
+            <h2>API接口测试</h2>
+            <div class="test-section">
+                <h3>项目管理API</h3>
+                <div class="api-test">
+                    <button onclick="testAPI('/api/projects')">获取项目列表</button>
+                    <div id="projects-result" class="result" style="display:none;"></div>
+                </div>
+            </div>
+            <div class="test-section">
+                <h3>员工管理API</h3>
+                <div class="api-test">
+                    <button onclick="testAPI('/api/employees')">获取员工列表</button>
+                    <div id="employees-result" class="result" style="display:none;"></div>
+                </div>
+            </div>
+            <div class="test-section">
+                <h3>健康检查API</h3>
+                <div class="api-test">
+                    <button onclick="testAPI('/api/health')">健康检查</button>
+                    <div id="health-result" class="result" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 员工信息模态框 -->
+    <div id="employee-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEmployeeModal()">&times;</span>
+            <h3 id="employee-modal-title">新增员工</h3>
+            <form id="employee-form">
+                <div class="form-group">
+                    <label>员工编号:</label>
+                    <input type="text" id="employee-id" required>
+                </div>
+                <div class="form-group">
+                    <label>姓名:</label>
+                    <input type="text" id="employee-name" required>
+                </div>
+                <div class="form-group">
+                    <label>身份证号:</label>
+                    <input type="text" id="employee-idcard" required>
+                </div>
+                <div class="form-group">
+                    <label>电话号码:</label>
+                    <input type="text" id="employee-phone" required>
+                </div>
+                <div class="form-group">
+                    <label>银行卡号:</label>
+                    <input type="text" id="employee-bankcard" required>
+                </div>
+                <div class="form-group">
+                    <label>开户行:</label>
+                    <input type="text" id="employee-bank" required>
+                </div>
+                <div class="form-group">
+                    <label>职位:</label>
+                    <input type="text" id="employee-position" required>
+                </div>
+                <div class="form-group">
+                    <label>在职状态:</label>
+                    <select id="employee-status" required>
+                        <option value="在职">在职</option>
+                        <option value="离职">离职</option>
+                    </select>
+                </div>
+                <div style="text-align: right; margin-top: 1rem;">
+                    <button type="button" onclick="closeEmployeeModal()" class="btn btn-secondary">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 确认对话框 -->
+    <div id="confirmation-modal" class="modal">
+        <div class="modal-content">
+            <h3>确认操作</h3>
+            <div id="confirmation-message"></div>
+            <div style="text-align: right; margin-top: 1rem;">
+                <button onclick="closeConfirmationModal()" class="btn btn-secondary">取消</button>
+                <button id="confirm-action-btn" class="btn btn-danger">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI确认对话框 -->
+    <div id="ai-confirmation" class="confirmation-dialog" style="display:none;">
+        <h4>⚠️ 操作确认</h4>
+        <div id="ai-confirmation-message"></div>
+        <div style="margin-top: 1rem;">
+            <button onclick="confirmAIAction()" class="btn btn-danger">确认执行</button>
+            <button onclick="cancelAIAction()" class="btn btn-secondary">取消</button>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentEditingEmployee = null;
+        let pendingAIAction = null;
+        
+        // 页面切换
+        function showPage(pageId) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            // 移除所有按钮的active状态
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            // 显示目标页面
+            document.getElementById(pageId).classList.add('active');
+            // 激活对应按钮
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+            
+            // 根据页面加载相应数据
+            if (pageId === 'dashboard') {
+                loadDashboardStats();
+            } else if (pageId === 'employees') {
+                loadEmployees();
+            } else if (pageId === 'files') {
+                loadFiles();
+                loadProjects();
+            } else if (pageId === 'finance') {
+                loadFinanceData();
+            }
+        }
+
+        // API测试
+        async function testAPI(endpoint) {
+            const resultId = endpoint.split('/').pop() + '-result';
+            const resultDiv = document.getElementById(resultId);
+            
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = '正在请求...';
+                
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = '请求失败: ' + error.message;
+            }
+        }
+
+        // 加载仪表盘统计
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch('/api/dashboard/stats');
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    const stats = data.data;
+                    
+                    // 更新员工统计卡片
+                    const employeeStats = document.getElementById('employee-stats');
+                    const employeeDetail = document.getElementById('employee-detail');
+                    if (employeeStats && employeeDetail) {
+                        employeeStats.textContent = stats.total_employees || '0';
+                        employeeDetail.textContent = 
+                            `员工总数 ${stats.total_employees || 0} 人，在职 ${stats.active_employees || 0} 人`;
+                    }
+                    
+                    // 更新文件统计卡片
+                    const fileStats = document.getElementById('file-stats');
+                    const fileDetail = document.getElementById('file-detail');
+                    if (fileStats && fileDetail) {
+                        fileStats.textContent = stats.total_files || '0';
+                        const fileDetail_text = stats.files_by_project ? 
+                            Object.entries(stats.files_by_project)
+                                .map(([project, count]) => `${project} ${count}个`)
+                                .join('，') : '暂无项目文件';
+                        fileDetail.textContent = 
+                            `总文件 ${stats.total_files || 0} 个，${fileDetail_text}`;
+                    }
+                    
+                    // 更新财务统计卡片
+                    const financeStats = document.getElementById('finance-stats');
+                    const financeDetail = document.getElementById('finance-detail');
+                    if (financeStats && financeDetail) {
+                        const currentMonth = new Date().toISOString().slice(0, 7);
+                        financeStats.textContent = 
+                            `¥${((stats.monthly_salary || 0) / 10000).toFixed(1)}万`;
+                        financeDetail.textContent = 
+                            `${currentMonth} 工资总额 ${((stats.monthly_salary || 0) / 10000).toFixed(1)} 万元，项目总开销 ${((stats.monthly_expenses || 0) / 10000).toFixed(1)} 万元`;
+                    }
+                    
+                    // 更新API测试区域（如果存在）
+                    const resultDiv = document.getElementById('dashboard-result');
+                    if (resultDiv) {
+                        resultDiv.style.display = 'block';
+                        resultDiv.innerHTML = `
+                            <strong>详细统计数据:</strong><br>
+                            员工总数: ${stats.total_employees || 0}<br>
+                            在职员工: ${stats.active_employees || 0}<br>
+                            项目总数: ${stats.total_projects || 0}<br>
+                            文件总数: ${stats.total_files || 0}<br>
+                            本月工资总额: ¥${(stats.monthly_salary || 0).toLocaleString()}<br>
+                            本月项目开销: ¥${(stats.monthly_expenses || 0).toLocaleString()}
+                        `;
+                    }
+                } else {
+                    // 设置默认值
+                    const employeeStats = document.getElementById('employee-stats');
+                    const fileStats = document.getElementById('file-stats');
+                    const financeStats = document.getElementById('finance-stats');
+                    if (employeeStats) employeeStats.textContent = '0';
+                    if (fileStats) fileStats.textContent = '0';
+                    if (financeStats) financeStats.textContent = '¥0';
+                    
+                    const resultDiv = document.getElementById('dashboard-result');
+                    if (resultDiv) {
+                        resultDiv.style.display = 'block';
+                        resultDiv.textContent = '加载失败: ' + (data.message || '未知错误');
+                    }
+                }
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+                // 设置错误状态
+                const employeeStats = document.getElementById('employee-stats');
+                const fileStats = document.getElementById('file-stats');
+                const financeStats = document.getElementById('finance-stats');
+                if (employeeStats) employeeStats.textContent = '加载失败';
+                if (fileStats) fileStats.textContent = '加载失败';
+                if (financeStats) financeStats.textContent = '加载失败';
+                
+                const resultDiv = document.getElementById('dashboard-result');
+                if (resultDiv) {
+                    resultDiv.style.display = 'block';
+                    resultDiv.textContent = '加载失败: ' + error.message;
+                }
+            }
+        }
+
+        // AI对话
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const messages = document.getElementById('chat-messages');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // 添加用户消息
+            addMessage(message, 'user');
+            
+            // 清空输入框
+            input.value = '';
+            
+            // 检查是否有上传的文件
+            const fileInput = document.getElementById('file-input');
+            const hasFile = fileInput.files.length > 0;
+            
+            try {
+                let requestData = { message: message };
+                
+                if (hasFile) {
+                    const formData = new FormData();
+                    formData.append('message', message);
+                    formData.append('file', fileInput.files[0]);
+                    
+                    const response = await fetch('/api/ai/chat/with-file', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    handleAIResponse(data);
+                    clearFile();
+                } else {
+                    const response = await fetch('/api/ai/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestData)
+                    });
+                    
+                    const data = await response.json();
+                    handleAIResponse(data);
+                }
+            } catch (error) {
+                addMessage('网络连接出现问题，请检查网络后重试。', 'ai');
+            }
+        }
+        
+        function addMessage(message, type) {
+            const messages = document.getElementById('chat-messages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${type}-message`;
+            msgDiv.textContent = message;
+            messages.appendChild(msgDiv);
+            messages.scrollTop = messages.scrollHeight;
+        }
+        
+        function handleAIResponse(data) {
+            if (data.success) {
+                if (data.needsConfirmation) {
+                    // 需要确认的操作
+                    showAIConfirmation(data.confirmationMessage, data.action);
+                } else if (data.needsClarification) {
+                    // 需要澄清的模糊指令
+                    addMessage(data.clarificationQuestion, 'ai');
+                } else {
+                    // 普通回复
+                    addMessage(data.data ? data.data.message : data.message, 'ai');
+                }
+            } else {
+                addMessage('抱歉，AI服务暂时不可用。', 'ai');
+            }
+        }
+        
+        function showAIConfirmation(message, action) {
+            document.getElementById('ai-confirmation-message').innerHTML = message;
+            document.getElementById('ai-confirmation').style.display = 'block';
+            
+            pendingAIAction = async function() {
+                try {
+                    const response = await fetch('/api/ai/chat/confirm', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ action: action })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        addMessage(data.response || data.message, 'ai');
+                        // 根据操作类型刷新相应页面数据
+                        if (action.type === 'employee') {
+                            loadEmployees();
+                        } else if (action.type === 'finance') {
+                            loadFinanceData();
+                        } else if (action.type === 'file') {
+                            loadFiles();
+                        }
+                    } else {
+                        addMessage('操作执行失败: ' + data.message, 'ai');
+                    }
+                } catch (error) {
+                    addMessage('操作执行失败: ' + error.message, 'ai');
+                }
+            };
+        }
+
+        // 处理回车键
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // 文件选择功能
+        function selectFile() {
+            document.getElementById('file-input').click();
+        }
+
+        function clearFile() {
+            document.getElementById('file-input').value = '';
+            document.getElementById('selected-file').style.display = 'none';
+        }
+
+        // 员工管理功能
+        async function loadEmployees() {
+            const tbody = document.getElementById('employee-tbody');
+            tbody.innerHTML = '<tr><td colspan="9">正在加载员工数据...</td></tr>';
+            
+            try {
+                const response = await fetch('/api/employees');
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    tbody.innerHTML = '';
+                    data.data.forEach(employee => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${employee.employee_id || ''}</td>
+                            <td>${employee.name || ''}</td>
+                            <td>${employee.id_card || ''}</td>
+                            <td>${employee.phone || ''}</td>
+                            <td>${employee.bank_card || ''}</td>
+                            <td>${employee.bank_name || ''}</td>
+                            <td>${employee.position || ''}</td>
+                            <td>${employee.status || ''}</td>
+                            <td>
+                                <button onclick="editEmployee('${employee.employee_id}')" class="btn btn-primary">编辑</button>
+                                <button onclick="deleteEmployee('${employee.employee_id}')" class="btn btn-danger">删除</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="9">暂无员工数据</td></tr>';
+                }
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="9">加载失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        async function searchEmployees() {
+            const searchTerm = document.getElementById('employee-search').value.trim();
+            if (!searchTerm) {
+                loadEmployees();
+                return;
+            }
+            
+            const tbody = document.getElementById('employee-tbody');
+            tbody.innerHTML = '<tr><td colspan="9">正在搜索...</td></tr>';
+            
+            try {
+                const response = await fetch(`/api/employees/search?q=${encodeURIComponent(searchTerm)}`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    tbody.innerHTML = '';
+                    data.data.forEach(employee => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${employee.employee_id || ''}</td>
+                            <td>${employee.name || ''}</td>
+                            <td>${employee.id_card || ''}</td>
+                            <td>${employee.phone || ''}</td>
+                            <td>${employee.bank_card || ''}</td>
+                            <td>${employee.bank_name || ''}</td>
+                            <td>${employee.position || ''}</td>
+                            <td>${employee.status || ''}</td>
+                            <td>
+                                <button onclick="editEmployee('${employee.employee_id}')" class="btn btn-primary">编辑</button>
+                                <button onclick="deleteEmployee('${employee.employee_id}')" class="btn btn-danger">删除</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="9">未找到匹配的员工</td></tr>';
+                }
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="9">搜索失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        function showAddEmployeeModal() {
+            currentEditingEmployee = null;
+            document.getElementById('employee-modal-title').textContent = '新增员工';
+            document.getElementById('employee-form').reset();
+            document.getElementById('employee-modal').style.display = 'block';
+        }
+
+        async function editEmployee(employeeId) {
+            try {
+                const response = await fetch(`/api/employees/${employeeId}`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    currentEditingEmployee = employeeId;
+                    const employee = data.data;
+                    document.getElementById('employee-modal-title').textContent = '编辑员工';
+                    document.getElementById('employee-id').value = employee.employee_id || '';
+                    document.getElementById('employee-name').value = employee.name || '';
+                    document.getElementById('employee-idcard').value = employee.id_card || '';
+                    document.getElementById('employee-phone').value = employee.phone || '';
+                    document.getElementById('employee-bankcard').value = employee.bank_card || '';
+                    document.getElementById('employee-bank').value = employee.bank_name || '';
+                    document.getElementById('employee-position').value = employee.position || '';
+                    document.getElementById('employee-status').value = employee.status || '在职';
+                    document.getElementById('employee-modal').style.display = 'block';
+                } else {
+                    alert('获取员工信息失败');
+                }
+            } catch (error) {
+                alert('获取员工信息失败: ' + error.message);
+            }
+        }
+
+        function closeEmployeeModal() {
+            document.getElementById('employee-modal').style.display = 'none';
+            currentEditingEmployee = null;
+        }
+
+        async function deleteEmployee(employeeId) {
+            if (confirm('确定要删除这个员工吗？')) {
+                try {
+                    const response = await fetch(`/api/employees/${employeeId}`, {
+                        method: 'DELETE'
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        alert('删除成功');
+                        loadEmployees();
+                    } else {
+                        alert('删除失败: ' + data.message);
+                    }
+                } catch (error) {
+                    alert('删除失败: ' + error.message);
+                }
+            }
+        }
+
+        // 文件管理功能
+        async function loadFiles() {
+            const container = document.getElementById('files-by-project');
+            container.innerHTML = '<p>正在加载文件数据...</p>';
+            
+            try {
+                const response = await fetch('/api/files');
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    container.innerHTML = '';
+                    const filesByProject = {};
+                    
+                    data.data.forEach(file => {
+                        const project = file.project_name || '未分类';
+                        if (!filesByProject[project]) {
+                            filesByProject[project] = [];
+                        }
+                        filesByProject[project].push(file);
+                    });
+                    
+                    Object.keys(filesByProject).forEach(project => {
+                        const projectDiv = document.createElement('div');
+                        projectDiv.className = 'file-group';
+                        projectDiv.innerHTML = `
+                            <h4>${project}</h4>
+                            <div class="file-list">
+                                ${filesByProject[project].map(file => `
+                                    <div class="file-item">
+                                        <span>${file.file_name}</span>
+                                        <button onclick="downloadFile('${file.file_id}')" class="btn btn-primary">下载</button>
+                                        <button onclick="deleteFile('${file.file_id}')" class="btn btn-danger">删除</button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                        container.appendChild(projectDiv);
+                    });
+                } else {
+                    container.innerHTML = '<p>暂无文件数据</p>';
+                }
+            } catch (error) {
+                container.innerHTML = '<p>加载失败: ' + error.message + '</p>';
+            }
+        }
+
+        async function loadProjects() {
+            try {
+                const response = await fetch('/api/projects');
+                const data = await response.json();
+                
+                const select = document.getElementById('project-select');
+                select.innerHTML = '<option value="">选择项目</option>';
+                
+                if (data.success && data.data) {
+                    data.data.forEach(project => {
+                        const option = document.createElement('option');
+                        option.value = project.project_name;
+                        option.textContent = project.project_name;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('加载项目失败:', error);
+            }
+        }
+
+        // 财务管理功能
+        async function loadFinanceData() {
+            await Promise.all([loadSalaryData(), loadExpenseData()]);
+        }
+
+        async function loadSalaryData() {
+            const tbody = document.getElementById('salary-tbody');
+            tbody.innerHTML = '<tr><td colspan="7">正在加载工资数据...</td></tr>';
+            
+            try {
+                const response = await fetch('/api/salaries');
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    tbody.innerHTML = '';
+                    data.data.forEach(salary => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${salary.employee_id || ''}</td>
+                            <td>${salary.employee_name || ''}</td>
+                            <td>${salary.project_name || ''}</td>
+                            <td>¥${(salary.amount || 0).toLocaleString()}</td>
+                            <td>${salary.salary_date || ''}</td>
+                            <td><span class="status-badge status-${salary.payment_status === '已发' ? 'paid' : 'pending'}">${salary.payment_status || '未发'}</span></td>
+                            <td>
+                                <button onclick="editSalary('${salary.salary_id}')" class="btn btn-primary">编辑</button>
+                                <button onclick="deleteSalary('${salary.salary_id}')" class="btn btn-danger">删除</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7">暂无工资数据</td></tr>';
+                }
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="7">加载失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        async function loadExpenseData() {
+            const tbody = document.getElementById('expense-tbody');
+            tbody.innerHTML = '<tr><td colspan="6">正在加载开销数据...</td></tr>';
+            
+            try {
+                const response = await fetch('/api/expenses');
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    tbody.innerHTML = '';
+                    data.data.forEach(expense => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${expense.project_name || ''}</td>
+                            <td>${expense.expense_type || ''}</td>
+                            <td>¥${(expense.amount || 0).toLocaleString()}</td>
+                            <td>${expense.expense_time || ''}</td>
+                            <td>${expense.unit || ''} × ${expense.quantity || 0}</td>
+                            <td>
+                                <button onclick="editExpense('${expense.expense_id}')" class="btn btn-primary">编辑</button>
+                                <button onclick="deleteExpense('${expense.expense_id}')" class="btn btn-danger">删除</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6">暂无开销数据</td></tr>';
+                }
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="6">加载失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        async function filterFinanceData() {
+            const month = document.getElementById('finance-month').value;
+            if (!month) {
+                loadFinanceData();
+                return;
+            }
+            
+            try {
+                const [salaryResponse, expenseResponse] = await Promise.all([
+                    fetch(`/api/finance/salaries?month=${month}`),
+                    fetch(`/api/finance/expenses?month=${month}`)
+                ]);
+                
+                const salaryData = await salaryResponse.json();
+                const expenseData = await expenseResponse.json();
+                
+                // 更新工资表
+                const salaryTbody = document.getElementById('salary-tbody');
+                if (salaryData.success && salaryData.data) {
+                    salaryTbody.innerHTML = '';
+                    salaryData.data.forEach(salary => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${salary.employee_id || ''}</td>
+                            <td>${salary.employee_name || ''}</td>
+                            <td>${salary.project_name || ''}</td>
+                            <td>¥${(salary.amount || 0).toLocaleString()}</td>
+                            <td>${salary.pay_date || ''}</td>
+                            <td><span class="status-badge status-${salary.status === '已发放' ? 'paid' : 'pending'}">${salary.status || '未发放'}</span></td>
+                            <td>
+                                <button onclick="editSalary('${salary.id}')" class="btn btn-primary">编辑</button>
+                                <button onclick="deleteSalary('${salary.id}')" class="btn btn-danger">删除</button>
+                            </td>
+                        `;
+                        salaryTbody.appendChild(row);
+                    });
+                } else {
+                    salaryTbody.innerHTML = '<tr><td colspan="7">该月份暂无工资数据</td></tr>';
+                }
+                
+                // 更新开销表
+                const expenseTbody = document.getElementById('expense-tbody');
+                if (expenseData.success && expenseData.data) {
+                    expenseTbody.innerHTML = '';
+                    expenseData.data.forEach(expense => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${expense.project_name || ''}</td>
+                            <td>${expense.expense_type || ''}</td>
+                            <td>¥${(expense.amount || 0).toLocaleString()}</td>
+                            <td>${expense.expense_date || ''}</td>
+                            <td>${expense.description || ''}</td>
+                            <td>
+                                <button onclick="editExpense('${expense.id}')" class="btn btn-primary">编辑</button>
+                                <button onclick="deleteExpense('${expense.id}')" class="btn btn-danger">删除</button>
+                            </td>
+                        `;
+                        expenseTbody.appendChild(row);
+                    });
+                } else {
+                    expenseTbody.innerHTML = '<tr><td colspan="6">该月份暂无开销数据</td></tr>';
+                }
+            } catch (error) {
+                alert('筛选失败: ' + error.message);
+            }
+        }
+
+        // 确认对话框
+        function closeConfirmationModal() {
+            document.getElementById('confirmation-modal').style.display = 'none';
+        }
+
+        // AI确认对话框
+        function confirmAIAction() {
+            if (pendingAIAction) {
+                pendingAIAction();
+                pendingAIAction = null;
+            }
+            document.getElementById('ai-confirmation').style.display = 'none';
+        }
+
+        function cancelAIAction() {
+            pendingAIAction = null;
+            document.getElementById('ai-confirmation').style.display = 'none';
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载默认页面数据
+            loadDashboardStats();
+            
+            // 文件上传处理
+            document.getElementById('file-upload-input').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const project = document.getElementById('project-select').value;
+                    if (!project) {
+                        alert('请先选择项目');
+                        return;
+                    }
+                    uploadFile(file, project);
+                }
+            });
+            
+            // 员工表单提交
+            document.getElementById('employee-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveEmployee();
+            });
+        });
+
+        async function uploadFile(file, project) {
+            if (!file) {
+                alert('请选择文件');
+                return;
+            }
+            
+            if (!project) {
+                alert('请选择项目');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('project_name', project);
+            
+            try {
+                const response = await fetch('/api/files/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert(`文件上传成功！\n文件名: ${file.name}\n项目: ${project}\n上传时间: ${new Date().toLocaleString()}`);
+                    
+                    // 清空文件选择
+                    const fileInput = document.getElementById('file-upload');
+                    const projectSelect = document.getElementById('project-select');
+                    if (fileInput) fileInput.value = '';
+                    if (projectSelect) projectSelect.value = '';
+                    
+                    // 重新加载数据
+                    loadFiles();
+                    loadDashboardStats();
+                } else {
+                    alert('文件上传失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('文件上传错误:', error);
+                alert('文件上传失败: ' + error.message);
+            }
+        }
+
+        async function saveEmployee() {
+            const employeeData = {
+                employee_id: document.getElementById('employee-id').value,
+                name: document.getElementById('employee-name').value,
+                id_card: document.getElementById('employee-idcard').value,
+                phone: document.getElementById('employee-phone').value,
+                bank_card: document.getElementById('employee-bankcard').value,
+                bank_name: document.getElementById('employee-bank').value,
+                position: document.getElementById('employee-position').value,
+                status: document.getElementById('employee-status').value
+            };
+            
+            try {
+                const url = currentEditingEmployee ? 
+                    `/api/employees/${currentEditingEmployee}` : 
+                    '/api/employees';
+                const method = currentEditingEmployee ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(employeeData)
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert(currentEditingEmployee ? '员工信息更新成功' : '员工添加成功');
+                    closeEmployeeModal();
+                    loadEmployees();
+                } else {
+                    alert('保存失败: ' + data.message);
+                }
+            } catch (error) {
+                alert('保存失败: ' + error.message);
+            }
+        }
+
+        // 文件下载
+        async function downloadFile(fileId) {
+            try {
+                const response = await fetch(`/api/files/download/${fileId}`);
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const contentDisposition = response.headers.get('Content-Disposition');
+                    let fileName = 'download';
+                    
+                    if (contentDisposition) {
+                        const fileNameMatch = contentDisposition.match(/filename="(.+)"/); 
+                        if (fileNameMatch) {
+                            fileName = fileNameMatch[1];
+                        }
+                    }
+                    
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = fileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+                } else {
+                    const data = await response.json();
+                    alert('下载失败: ' + (data.message || '文件不存在'));
+                }
+            } catch (error) {
+                console.error('文件下载错误:', error);
+                alert('下载失败: ' + error.message);
+            }
+        }
+
+        // 删除文件
+         async function deleteFile(fileId) {
+             try {
+                 // 先获取文件信息
+                 const fileResponse = await fetch(`/api/files/${fileId}`);
+                 const fileData = await fileResponse.json();
+                 
+                 let fileName = '未知文件';
+                 if (fileData.success && fileData.data) {
+                     fileName = fileData.data.file_name;
+                 }
+                 
+                 if (!confirm(`确认删除文件 "${fileName}"？\n此操作不可撤销，请确认。`)) {
+                     return;
+                 }
+                 
+                 const response = await fetch(`/api/files/${fileId}`, {
+                     method: 'DELETE'
+                 });
+                 
+                 const data = await response.json();
+                 
+                 if (data.success) {
+                     alert(`文件 "${fileName}" 删除成功`);
+                     loadFiles(); // 重新加载文件列表
+                     loadDashboardStats(); // 更新统计数据
+                 } else {
+                     alert('删除失败: ' + data.message);
+                 }
+             } catch (error) {
+                 console.error('文件删除错误:', error);
+                 alert('删除失败: ' + error.message);
+             }
+         }
+
+         // 财务管理相关函数
+         async function editSalary(salaryId) {
+             try {
+                 const response = await fetch(`/api/finance/salaries/${salaryId}`);
+                 const data = await response.json();
+                 
+                 if (data.success && data.data) {
+                     const salary = data.data;
+                     const newAmount = prompt(`编辑工资金额\n员工: ${salary.employee_name}\n项目: ${salary.project_name}\n当前金额: ¥${salary.amount}`, salary.amount);
+                     
+                     if (newAmount !== null && newAmount !== '') {
+                         const updateResponse = await fetch(`/api/finance/salaries/${salaryId}`, {
+                             method: 'PUT',
+                             headers: {
+                                 'Content-Type': 'application/json'
+                             },
+                             body: JSON.stringify({ amount: parseFloat(newAmount) })
+                         });
+                         
+                         const updateData = await updateResponse.json();
+                         if (updateData.success) {
+                             alert('工资信息更新成功');
+                             loadFinanceData();
+                             loadDashboardStats();
+                         } else {
+                             alert('更新失败: ' + updateData.message);
+                         }
+                     }
+                 } else {
+                     alert('获取工资信息失败');
+                 }
+             } catch (error) {
+                 console.error('编辑工资错误:', error);
+                 alert('编辑失败: ' + error.message);
+             }
+         }
+
+         async function deleteSalary(salaryId) {
+             try {
+                 const response = await fetch(`/api/finance/salaries/${salaryId}`);
+                 const data = await response.json();
+                 
+                 let employeeName = '未知员工';
+                 if (data.success && data.data) {
+                     employeeName = data.data.employee_name;
+                 }
+                 
+                 if (!confirm(`确认删除员工 "${employeeName}" 的工资记录？\n此操作不可撤销，请确认。`)) {
+                     return;
+                 }
+                 
+                 const deleteResponse = await fetch(`/api/finance/salaries/${salaryId}`, {
+                     method: 'DELETE'
+                 });
+                 
+                 const deleteData = await deleteResponse.json();
+                 
+                 if (deleteData.success) {
+                     alert(`员工 "${employeeName}" 的工资记录删除成功`);
+                     loadFinanceData();
+                     loadDashboardStats();
+                 } else {
+                     alert('删除失败: ' + deleteData.message);
+                 }
+             } catch (error) {
+                 console.error('删除工资记录错误:', error);
+                 alert('删除失败: ' + error.message);
+             }
+         }
+
+         async function editExpense(expenseId) {
+             try {
+                 const response = await fetch(`/api/finance/expenses/${expenseId}`);
+                 const data = await response.json();
+                 
+                 if (data.success && data.data) {
+                     const expense = data.data;
+                     const newAmount = prompt(`编辑项目开销\n项目: ${expense.project_name}\n类型: ${expense.expense_type}\n当前金额: ¥${expense.amount}`, expense.amount);
+                     
+                     if (newAmount !== null && newAmount !== '') {
+                         const updateResponse = await fetch(`/api/finance/expenses/${expenseId}`, {
+                             method: 'PUT',
+                             headers: {
+                                 'Content-Type': 'application/json'
+                             },
+                             body: JSON.stringify({ amount: parseFloat(newAmount) })
+                         });
+                         
+                         const updateData = await updateResponse.json();
+                         if (updateData.success) {
+                             alert('开销信息更新成功');
+                             loadFinanceData();
+                             loadDashboardStats();
+                         } else {
+                             alert('更新失败: ' + updateData.message);
+                         }
+                     }
+                 } else {
+                     alert('获取开销信息失败');
+                 }
+             } catch (error) {
+                 console.error('编辑开销错误:', error);
+                 alert('编辑失败: ' + error.message);
+             }
+         }
+
+         async function deleteExpense(expenseId) {
+             try {
+                 const response = await fetch(`/api/finance/expenses/${expenseId}`);
+                 const data = await response.json();
+                 
+                 let projectName = '未知项目';
+                 let expenseType = '未知类型';
+                 if (data.success && data.data) {
+                     projectName = data.data.project_name;
+                     expenseType = data.data.expense_type;
+                 }
+                 
+                 if (!confirm(`确认删除项目 "${projectName}" 的 "${expenseType}" 开销记录？\n此操作不可撤销，请确认。`)) {
+                     return;
+                 }
+                 
+                 const deleteResponse = await fetch(`/api/finance/expenses/${expenseId}`, {
+                     method: 'DELETE'
+                 });
+                 
+                 const deleteData = await deleteResponse.json();
+                 
+                 if (deleteData.success) {
+                     alert(`项目 "${projectName}" 的开销记录删除成功`);
+                     loadFinanceData();
+                     loadDashboardStats();
+                 } else {
+                     alert('删除失败: ' + deleteData.message);
+                 }
+             } catch (error) {
+                 console.error('删除开销记录错误:', error);
+                 alert('删除失败: ' + error.message);
+             }
+         }
+    </script>
+</body>
+</html>
