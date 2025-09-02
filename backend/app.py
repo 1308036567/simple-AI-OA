@@ -28,7 +28,7 @@ db = DatabaseManager()
 
 # DeepSeek API配置
 # 请在环境变量中设置DEEPSEEK_API_KEY，或直接替换下面的值
-DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', 'sk-f2d1d02987684d5e9a9c420b13ecc07a')  # 从环境变量获取API密钥
+DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', '')  # API密钥
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 
 # 初始化AI安全层
